@@ -39,8 +39,10 @@ parted -s -a optimal $HDD_DST unit MB mklabel msdos mkpart primary ext3 2 $HDD_B
 set 1 boot on \
 mkpart primary ext4 $HDD_BOOT_PARTSZ $HDD_ROOT_PARTSZ \
 mkpart primary linux-swap $HDD_ROOT_PARTSZ 100%
+if [ $? -ne 0 ]; then echo "!! Error."; exit 6; fi
 echo "==> Verificando tabla de particiones"
 parted $HDD_DST print
+if [ $? -ne 0 ]; then echo "!! Error."; exit 7; fi
 
 echo "==> Formateando $HDD_DST\1 (boot)"
 mkfs.ext3 "$HDD_DST"1
