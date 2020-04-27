@@ -7,7 +7,8 @@ CTRY_CODE="cl"
 echo "==> Iniciando Configuracion de sistema Archlinux"
 echo "==> Usando mirror '.$CTRY_CODE'"
 mv /etc/pacman.d/mirrorlist /etc/pacman.d/bck_mirrorlist
-cat /etc/pacman.d/bck_mirrorlist | grep ".$CTRY_CODE/" > /etc/pacman.d/mirrorlist
+echo "Server = http://mirror.ufro.cl/archlinux/\$repo/os/\$arch" > /etc/pacman.d/mirrorlist
+echo "Server = http://mirror.archlinux.cl/\$repo/os/\$arch" >> /etc/pacman.d/mirrorlist
 
 echo "==> Despejando '$MNT_DST'"
 umount -R /mnt | true
