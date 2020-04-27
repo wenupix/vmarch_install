@@ -5,9 +5,14 @@ USR_DEF="wenupix"
 CTRY_CODE="cl"
 
 echo "==> Iniciando Configuracion de sistema Archlinux"
-echo "  -> Usando mirror '.$CTRY_CODE'"
+echo "==> Usando mirror '.$CTRY_CODE'"
 mv /etc/pacman.d/mirrorlist /etc/pacman.d/bck_mirrorlist
 cat /etc/pacman.d/bck_mirrorlist | grep ".$CTRY_CODE/" > /etc/pacman.d/mirrorlist
+
+echo "==> Despejando '$MNT_DST'"
+umount -R /mnt | true
+rm -rf /mnt/* | true
+
 # ---
 echo "==> Verificando disco $HDD_DST"
 # particiones
@@ -48,6 +53,7 @@ echo "==> Montando carpetas"
 mount $HDD_DST\2 $MNT_DST
 mkdir -p /mnt/boot
 mount $HDD_DST\1 $MNT_DST/boot
+
 echo "==> Instalando paquetes"
 pacstrap $MNT_DST base base-devel linux grub networkmanager wget git vim openssh
 echo "==> Post-configuracion"
