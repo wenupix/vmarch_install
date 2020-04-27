@@ -58,19 +58,28 @@ mount $HDD_DST\1 $MNT_DST/boot
 echo "==> Instalando paquetes"
 pacstrap $MNT_DST base base-devel linux grub networkmanager wget git vim openssh
 echo "==> Post-configuracion"
+echo "  -> fstab"
 genfstab -Up $MNT_DST > $MNT_DST/etc/fstab
+echo "  -> hostname"
 echo "vm-archlinux" > $MNT_DST/etc/hostname
+echo "  -> locale"
 echo "LANG=es_CL.UTF-8" > $MNT_DST/etc/locale.conf
+echo "  -> console locale"
 echo "KEYMAP=es" > $MNT_DST/etc/vconsole.conf
+echo "  -> chroot: locale"
 arch-chroot $MNT_DST sed -i 's/#es_CL.UTF-8/es_CL.UTF-8/' /etc/locale.gen
 arch-chroot $MNT_DST locale-gen
+echo "  -> chroot: grub"
 arch-chroot $MNT_DST grub-install $HDD_DST
 sync
+echo "  -> chroot: initram"
 arch-chroot $MNT_DST mkinitcpio -p linux
 sync
+echo "  -> chroot: grub: configuracion"
 arch-chroot $MNT_DST grub-mkconfig -o /boot/grub/grub.cfg
-arch-chroot $MNT_DST echo "root:root" | chpasswd
+echo "  -> chroot: usuarios"
+arch-chroot $MNT_DST echo "root" | passwd root --stdin
 arch-chroot $MNT_DST useradd -m -g users -G wheel,network,power,audio,video,lp -s /bin/bash $USR_DEF
-arch-chroot $MNT_DST echo "$MNT_DST:$MNT_DST" | chpasswd
+arch-chroot $MNT_DST echo $USR_DEF | passwd $USR_DEF --stdin
 #
 umount -R $MNT_DST
