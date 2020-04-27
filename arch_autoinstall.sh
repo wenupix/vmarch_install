@@ -25,7 +25,8 @@ if [ $HDD_NPART -ne 0 ]; then
     #echo "!! Limipiar disco antes de continuar."
     #exit 10
 fi
-
+sync
+sleep 5
 # valores en MB
 HDD_BOOT_PARTSZ=512
 HDD_SWAP_PARTSZ=1024
