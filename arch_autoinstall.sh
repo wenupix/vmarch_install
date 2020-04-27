@@ -13,11 +13,6 @@ echo "Server = http://mirror.archlinux.cl/\$repo/os/\$arch" >> /etc/pacman.d/mir
 echo "==> Despejando '$MNT_DST'"
 umount -R /mnt | true
 rm -rf /mnt/* | true
-echo "==> Verificando SWAP"
-if [ $( lsblk -l $HDD_DST | grep -i swap | wc -l ) -ne 0 ]; then
-    echo "---> swapoff..."
-    swapoff $( lsblk -lp $HDD_DST | grep -i swap | awk '{ print $1 }' )
-fi
 
 # ---
 echo "==> Verificando disco $HDD_DST"
@@ -25,13 +20,12 @@ echo "==> Verificando disco $HDD_DST"
 HDD_NPART=$( fdisk -l $HDD_DST | grep ^$HDD_DST | wc -l )
 if [ $HDD_NPART -ne 0 ]; then
     echo "!! AVISO: disco usado."
-    echo "---> Limpiando"
+    echo "  -> Limpiando"
     dd if=/dev/zero of=$HDD_DST bs=8M count=64 oflag=sync status=progress && sync
     #echo "!! Limipiar disco antes de continuar."
     #exit 10
 fi
-sync
-sleep 5
+
 # valores en MB
 HDD_BOOT_PARTSZ=512
 HDD_SWAP_PARTSZ=1024
@@ -44,10 +38,8 @@ parted -s -a optimal $HDD_DST unit MB mklabel msdos mkpart primary ext3 2 $HDD_B
 set 1 boot on \
 mkpart primary ext4 $HDD_BOOT_PARTSZ $HDD_ROOT_PARTSZ \
 mkpart primary linux-swap $HDD_ROOT_PARTSZ 100%
-if [ $? -ne 0 ]; then echo "!! Error."; exit 6; fi
 echo "==> Verificando tabla de particiones"
 parted $HDD_DST print
-if [ $? -ne 0 ]; then echo "!! Error."; exit 7; fi
 
 echo "==> Formateando $HDD_DST\1 (boot)"
 mkfs.ext3 "$HDD_DST"1
@@ -94,9 +86,12 @@ sync
 echo "---> chroot: grub: configuracion"
 arch-chroot $MNT_DST grub-mkconfig -o /boot/grub/grub.cfg
 echo "---> chroot: misc"
-arch-chroot $MNT_DST echo "root:root" | chpasswd
+arch-chroot $MNT_DST echo "root:root" | chpasswd -e
 echo "---> chroot: NetworkManager: activar"
-arch-chroot $MNT_DST systemctl enable NetworkManager
-#
+arch-chroot $MNT_DST systemctl enable NetworkManager > /dev/null
+
+echo "==> Finalizando"
 umount -R $MNT_DST
 swapoff "$HDD_DST"3
+sleep 5
+reboot
