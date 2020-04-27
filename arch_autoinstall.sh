@@ -13,6 +13,8 @@ echo "Server = http://mirror.archlinux.cl/\$repo/os/\$arch" >> /etc/pacman.d/mir
 echo "==> Despejando '$MNT_DST'"
 umount -R /mnt | true
 rm -rf /mnt/* | true
+echo "==> Verificando SWAP"
+if [ $( lsblk -l $HDD_DST | grep -i swap | wc -l ) -ne 0 ]; then swapoff $( lsblk -lp $HDD_DST | grep -i swap | awk '{ print $1 }' ); fi
 
 # ---
 echo "==> Verificando disco $HDD_DST"
