@@ -14,7 +14,10 @@ echo "==> Despejando '$MNT_DST'"
 umount -R /mnt | true
 rm -rf /mnt/* | true
 echo "==> Verificando SWAP"
-if [ $( lsblk -l $HDD_DST | grep -i swap | wc -l ) -ne 0 ]; then swapoff $( lsblk -lp $HDD_DST | grep -i swap | awk '{ print $1 }' ); fi
+if [ $( lsblk -l $HDD_DST | grep -i swap | wc -l ) -ne 0 ]; then
+    echo "---> swapoff..."
+    swapoff $( lsblk -lp $HDD_DST | grep -i swap | awk '{ print $1 }' )
+fi
 
 # ---
 echo "==> Verificando disco $HDD_DST"
@@ -22,7 +25,7 @@ echo "==> Verificando disco $HDD_DST"
 HDD_NPART=$( fdisk -l $HDD_DST | grep ^$HDD_DST | wc -l )
 if [ $HDD_NPART -ne 0 ]; then
     echo "!! AVISO: disco usado."
-    echo "  -> Limpiando"
+    echo "---> Limpiando"
     dd if=/dev/zero of=$HDD_DST bs=8M count=64 oflag=sync status=progress && sync
     #echo "!! Limipiar disco antes de continuar."
     #exit 10
