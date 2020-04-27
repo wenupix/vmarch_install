@@ -35,8 +35,15 @@ mkpart primary linux-swap $HDD_ROOT_PARTSZ 100%
 echo "==> Verificando tabla de particiones"
 parted $HDD_DST print
 
+echo "==> Formateando $HDD_DST\1 (boot)"
+mkfs.ext3 $HDD_DST\1
+echo "==> Formateando $HDD_DST\2 (root)"
+mkfs.ext4 $HDD_DST\2
+echo "==> Formateando $HDD_DST\3 (swap)"
+mkswap $HDD_DST\3
 echo "==> Activando SWAP"
 swapon $HDD_DST\3
+
 echo "==> Montando carpetas"
 mount $HDD_DST\2 $MNT_DST
 mkdir -p /mnt/boot
