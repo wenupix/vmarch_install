@@ -42,44 +42,53 @@ echo "==> Verificando tabla de particiones"
 parted $HDD_DST print
 
 echo "==> Formateando $HDD_DST\1 (boot)"
-mkfs.ext3 $HDD_DST\1
+mkfs.ext3 "$HDD_DST"1
+if [ $? -ne 0 ]; then echo "!! Error."; exit 9; fi
 echo "==> Formateando $HDD_DST\2 (root)"
-mkfs.ext4 $HDD_DST\2
+mkfs.ext4 "$HDD_DST"2
+if [ $? -ne 0 ]; then echo "!! Error."; exit 9; fi
 echo "==> Formateando $HDD_DST\3 (swap)"
-mkswap $HDD_DST\3
+mkswap "$HDD_DST"3
+if [ $? -ne 0 ]; then echo "!! Error."; exit 9; fi
 echo "==> Activando SWAP"
-swapon $HDD_DST\3
+swapon "$HDD_DST"3
+if [ $? -ne 0 ]; then echo "!! Error."; exit 9; fi
 
 echo "==> Montando carpetas"
-mount $HDD_DST\2 $MNT_DST
-mkdir -p /mnt/boot
-mount $HDD_DST\1 $MNT_DST/boot
+mount "$HDD_DST"2 $MNT_DST
+if [ $? -ne 0 ]; then echo "!! Error."; exit 8; fi
+mkdir -p $MNT_DST/boot
+if [ $? -ne 0 ]; then echo "!! Error."; exit 8; fi
+mount "$HDD_DST"1 $MNT_DST/boot
+if [ $? -ne 0 ]; then echo "!! Error."; exit 8; fi
 
 echo "==> Instalando paquetes"
-pacstrap $MNT_DST base base-devel linux grub networkmanager wget git vim openssh
+pacstrap $MNT_DST base base-devel linux grub networkmanager 
+#wget git vim openssh
 echo "==> Post-configuracion"
-echo "  -> fstab"
+echo "---> fstab"
 genfstab -Up $MNT_DST > $MNT_DST/etc/fstab
-echo "  -> hostname"
+echo "---> hostname"
 echo "vm-archlinux" > $MNT_DST/etc/hostname
-echo "  -> locale"
+echo "---> locale"
 echo "LANG=es_CL.UTF-8" > $MNT_DST/etc/locale.conf
-echo "  -> console locale"
+echo "---> console locale"
 echo "KEYMAP=es" > $MNT_DST/etc/vconsole.conf
-echo "  -> chroot: locale"
+echo "---> chroot: locale"
 arch-chroot $MNT_DST sed -i 's/#es_CL.UTF-8/es_CL.UTF-8/' /etc/locale.gen
 arch-chroot $MNT_DST locale-gen
-echo "  -> chroot: grub"
+echo "---> chroot: grub"
 arch-chroot $MNT_DST grub-install $HDD_DST
 sync
-echo "  -> chroot: initram"
+echo "---> chroot: initram"
 arch-chroot $MNT_DST mkinitcpio -p linux
 sync
-echo "  -> chroot: grub: configuracion"
+echo "---> chroot: grub: configuracion"
 arch-chroot $MNT_DST grub-mkconfig -o /boot/grub/grub.cfg
-echo "  -> chroot: usuarios"
-arch-chroot $MNT_DST echo "root" | passwd root --stdin
-arch-chroot $MNT_DST useradd -m -g users -G wheel,network,power,audio,video,lp -s /bin/bash $USR_DEF
-arch-chroot $MNT_DST echo $USR_DEF | passwd $USR_DEF --stdin
+echo "---> chroot: misc"
+arch-chroot $MNT_DST echo "root:root" | chpasswd
+echo "---> chroot: NetworkManager: activar"
+arch-chroot $MNT_DST systemctl enable NetworkManager
 #
 umount -R $MNT_DST
+swapoff "$HDD_DST"3
